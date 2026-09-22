@@ -29,6 +29,8 @@ const orderSchema = new mongoose.Schema(
     msg: { type: String, default: '' },
     notes: { type: String, default: '' },
     pay: { type: String, enum: ['UPI', 'Card', 'Net Banking'], required: true },
+    razorpayOrderId: { type: String, default: '' },
+    razorpayPaymentId: { type: String, default: '' },
   },
   { timestamps: true }
 );

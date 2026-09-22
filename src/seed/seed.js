@@ -13,6 +13,7 @@ import { BlogPost } from '../models/BlogPost.js';
 import { Faq } from '../models/Faq.js';
 import { Review } from '../models/Review.js';
 import { Order } from '../models/Order.js';
+import { Transaction } from '../models/Transaction.js';
 import { Enquiry } from '../models/Enquiry.js';
 import { Setting } from '../models/Setting.js';
 import { Counter } from '../models/Counter.js';
@@ -29,7 +30,7 @@ async function run() {
     User.deleteMany({}), Product.deleteMany({}), Category.deleteMany({}), Flavour.deleteMany({}),
     Occasion.deleteMany({}), Addon.deleteMany({}), Banner.deleteMany({}), BlogPost.deleteMany({}),
     Faq.deleteMany({}), Review.deleteMany({}), Order.deleteMany({}), Enquiry.deleteMany({}),
-    Setting.deleteMany({}), Counter.deleteMany({}),
+    Setting.deleteMany({}), Counter.deleteMany({}), Transaction.deleteMany({}),
   ]);
 
   console.log('Seeding catalog content...');
@@ -62,6 +63,9 @@ async function run() {
       email: c.email,
       phone: c.phone,
       addr: c.addr || '',
+      addresses: c.addr
+        ? [{ label: 'Home', line: c.addr, city: c.city || '', pin: '', isDefault: true }]
+        : [],
       passwordHash: defaultPasswordHash,
       role: 'customer',
     }))
@@ -69,8 +73,37 @@ async function run() {
   const userByEmail = new Map(customerDocs.map((u) => [u.email, u._id]));
 
   console.log('Seeding orders...');
-  await Order.insertMany(
-    orders.map(({ customerEmail, ...o }) => ({ ...o, email: customerEmail, user: userByEmail.get(customerEmail) }))
+  const now = Date.now();
+  const orderDocs = await Order.insertMany(
+    orders.map(({ customerEmail, ...o }, i) => ({
+      ...o,
+      email: customerEmail,
+      user: userByEmail.get(customerEmail),
+      razorpayOrderId: `order_seed${1000 + i}`,
+      razorpayPaymentId: `pay_seed${1000 + i}`,
+      // spread the seeded orders over the last week so finance charts have shape
+      createdAt: new Date(now - (orders.length - i) * 22 * 60 * 60 * 1000),
+    })),
+    { timestamps: false }
+  );
+
+  console.log('Seeding payment transactions...');
+  await Transaction.insertMany(
+    orderDocs.map((o, i) => ({
+      txnId: `TXN${10001 + i}`,
+      order: o._id,
+      orderCode: o.code,
+      user: o.user,
+      customer: o.customer,
+      email: o.email,
+      amount: o.amount,
+      method: o.pay,
+      status: o.status === 'Cancelled' ? 'Refunded' : 'Paid',
+      razorpayOrderId: o.razorpayOrderId,
+      razorpayPaymentId: o.razorpayPaymentId,
+      paidAt: o.createdAt,
+      ...(o.status === 'Cancelled' ? { refundedAt: new Date(o.createdAt.getTime() + 3600000) } : {}),
+    }))
   );
 
   console.log('Seeding custom cake enquiries...');
@@ -80,12 +113,13 @@ async function run() {
   await Counter.create([
     { key: 'order', value: 1048 },
     { key: 'enquiry', value: 1024 },
+    { key: 'transaction', value: orders.length },
   ]);
 
   console.log('\nDone. Seeded:');
   console.log(`  ${products.length} products, ${categories.length} categories, ${banners.length} banners`);
   console.log(`  ${blogPosts.length} blog posts, ${orders.length} orders, ${enquiries.length} enquiries`);
-  console.log(`  ${customers.length} customers, 1 admin`);
+  console.log(`  ${customers.length} customers, 1 admin, ${orders.length} transactions`);
   console.log(`\nAdmin login: ${adminEmail} / ${adminPassword}`);
   console.log('Customer login (any seeded customer email) / Customer@123');
 

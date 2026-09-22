@@ -20,6 +20,9 @@ export const createOrderSchema = z.object({
   msg: z.string().optional().default(''),
   notes: z.string().optional().default(''),
   pay: z.enum(['UPI', 'Card', 'Net Banking']),
+  razorpayOrderId: z.string().min(1, 'Payment is required'),
+  razorpayPaymentId: z.string().min(1, 'Payment is required'),
+  razorpaySignature: z.string().min(1, 'Payment is required'),
 });
 
 export const updateOrderStatusSchema = z.object({

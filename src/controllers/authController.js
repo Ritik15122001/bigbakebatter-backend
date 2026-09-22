@@ -44,3 +44,70 @@ export const updateMe = asyncHandler(async (req, res) => {
   );
   sendSuccess(res, { message: 'Profile updated', data: user });
 });
+
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const user = await User.findById(req.user._id).select('+passwordHash');
+  if (!(await user.comparePassword(currentPassword))) {
+    throw ApiError.unauthorized('Your current password is incorrect');
+  }
+  user.passwordHash = await User.hashPassword(newPassword);
+  await user.save();
+  sendSuccess(res, { message: 'Password updated' });
+});
+
+/** Keeps exactly one default address and mirrors it onto the legacy `addr` field. */
+function syncDefaultAddress(user, defaultId) {
+  user.addresses.forEach((a) => {
+    a.isDefault = String(a._id) === String(defaultId);
+  });
+  const def = user.addresses.find((a) => a.isDefault) || user.addresses[0];
+  if (def) {
+    def.isDefault = true;
+    user.addr = [def.line, def.city, def.pin].filter(Boolean).join(', ');
+  } else {
+    user.addr = '';
+  }
+}
+
+export const addAddress = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  const isFirst = user.addresses.length === 0;
+  user.addresses.push({ ...req.body, isDefault: isFirst || !!req.body.isDefault });
+  const added = user.addresses[user.addresses.length - 1];
+  if (isFirst || req.body.isDefault) syncDefaultAddress(user, added._id);
+  await user.save();
+  sendSuccess(res, { statusCode: 201, message: 'Address added', data: user });
+});
+
+export const updateAddress = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  const address = user.addresses.id(req.params.addressId);
+  if (!address) throw ApiError.notFound('Address not found');
+
+  Object.assign(address, req.body);
+  if (req.body.isDefault || address.isDefault) syncDefaultAddress(user, address._id);
+  await user.save();
+  sendSuccess(res, { message: 'Address updated', data: user });
+});
+
+export const deleteAddress = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  const address = user.addresses.id(req.params.addressId);
+  if (!address) throw ApiError.notFound('Address not found');
+
+  const wasDefault = address.isDefault;
+  address.deleteOne();
+  if (wasDefault) syncDefaultAddress(user, user.addresses[0]?._id);
+  await user.save();
+  sendSuccess(res, { message: 'Address removed', data: user });
+});
+
+export const setDefaultAddress = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  const address = user.addresses.id(req.params.addressId);
+  if (!address) throw ApiError.notFound('Address not found');
+  syncDefaultAddress(user, address._id);
+  await user.save();
+  sendSuccess(res, { message: 'Default address updated', data: user });
+});

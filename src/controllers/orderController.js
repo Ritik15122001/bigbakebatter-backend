@@ -3,15 +3,27 @@ import { ApiError } from '../utils/ApiError.js';
 import { sendSuccess } from '../utils/ApiResponse.js';
 import { Order } from '../models/Order.js';
 import { nextSequence } from '../models/Counter.js';
+import { verifyRazorpaySignature } from './paymentController.js';
+import { recordTransaction } from './transactionController.js';
 
 export const createOrder = asyncHandler(async (req, res) => {
+  const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+  verifyRazorpaySignature({ razorpayOrderId, razorpayPaymentId, razorpaySignature });
+
   const seq = await nextSequence('order');
   const order = await Order.create({
     ...req.body,
     code: `#BB${seq}`,
     user: req.user?._id,
   });
+  await recordTransaction(order);
   sendSuccess(res, { statusCode: 201, message: 'Order placed', data: order });
+});
+
+export const getMyOrderByCode = asyncHandler(async (req, res) => {
+  const order = await Order.findOne({ code: req.params.code, user: req.user._id });
+  if (!order) throw ApiError.notFound('Order not found');
+  sendSuccess(res, { data: order });
 });
 
 export const getMyOrders = asyncHandler(async (req, res) => {
