@@ -5,6 +5,7 @@ export const productSchema = z.object({
   cat: z.string().min(1),
   flavour: z.string().optional().default(''),
   base: z.coerce.number().min(0),
+  weights: z.array(z.object({ w: z.string().min(1), price: z.coerce.number().min(0) })).optional().default([]),
   tag: z.string().optional().default(''),
   stock: z.enum(['In stock', 'Low stock', 'Out of stock']).optional().default('In stock'),
   qty: z.coerce.number().optional().default(0),
