@@ -9,6 +9,7 @@ import mongoSanitize from 'express-mongo-sanitize';
 
 import apiRoutes from './routes/index.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
+import { handleRazorpayWebhook } from './controllers/paymentController.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -27,6 +28,11 @@ export function createApp() {
   );
 
   app.use(helmet({ crossOriginResourcePolicy: false }));
+
+  // Razorpay signs the exact raw request bytes, so this route needs the
+  // unparsed body — it must be mounted before the global express.json().
+  app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), handleRazorpayWebhook);
+
   app.use(express.json({ limit: '2mb' }));
   app.use(mongoSanitize());
   if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));

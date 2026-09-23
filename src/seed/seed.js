@@ -17,6 +17,7 @@ import { Transaction } from '../models/Transaction.js';
 import { Enquiry } from '../models/Enquiry.js';
 import { Setting } from '../models/Setting.js';
 import { Counter } from '../models/Counter.js';
+import { Notification } from '../models/Notification.js';
 
 import {
   products, categories, flavours, occasions, addons, banners, blogPosts,
@@ -30,7 +31,7 @@ async function run() {
     User.deleteMany({}), Product.deleteMany({}), Category.deleteMany({}), Flavour.deleteMany({}),
     Occasion.deleteMany({}), Addon.deleteMany({}), Banner.deleteMany({}), BlogPost.deleteMany({}),
     Faq.deleteMany({}), Review.deleteMany({}), Order.deleteMany({}), Enquiry.deleteMany({}),
-    Setting.deleteMany({}), Counter.deleteMany({}), Transaction.deleteMany({}),
+    Setting.deleteMany({}), Counter.deleteMany({}), Transaction.deleteMany({}), Notification.deleteMany({}),
   ]);
 
   console.log('Seeding catalog content...');
@@ -107,7 +108,28 @@ async function run() {
   );
 
   console.log('Seeding custom cake enquiries...');
-  await Enquiry.insertMany(enquiries);
+  const enquiryDocs = await Enquiry.insertMany(enquiries);
+
+  console.log('Seeding notifications...');
+  const orderNotifs = orderDocs.slice(-4).map((o, i, arr) => ({
+    type: 'order',
+    title: `New order ${o.code}`,
+    message: `${o.customer} placed an order for ₹${o.amount.toLocaleString('en-IN')}`,
+    link: '/orders',
+    meta: { orderId: o._id, code: o.code },
+    read: i < arr.length - 2, // only the 2 most recent stay unread
+    createdAt: o.createdAt,
+  }));
+  const enquiryNotifs = enquiryDocs.map((e) => ({
+    type: 'enquiry',
+    title: `New custom cake enquiry ${e.code}`,
+    message: `${e.name} enquired about a ${e.occasion} cake`,
+    link: '/enquiries',
+    meta: { enquiryId: e._id, code: e.code },
+    read: e.status !== 'New',
+    createdAt: e.createdAt || new Date(),
+  }));
+  await Notification.insertMany([...orderNotifs, ...enquiryNotifs], { timestamps: false });
 
   console.log('Priming order/enquiry code counters...');
   await Counter.create([

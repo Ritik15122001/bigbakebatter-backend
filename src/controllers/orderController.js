@@ -5,6 +5,7 @@ import { Order } from '../models/Order.js';
 import { nextSequence } from '../models/Counter.js';
 import { verifyRazorpaySignature } from './paymentController.js';
 import { recordTransaction } from './transactionController.js';
+import { notify } from './notificationController.js';
 
 export const createOrder = asyncHandler(async (req, res) => {
   const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
@@ -17,6 +18,13 @@ export const createOrder = asyncHandler(async (req, res) => {
     user: req.user?._id,
   });
   await recordTransaction(order);
+  await notify({
+    type: 'order',
+    title: `New order ${order.code}`,
+    message: `${order.customer} placed an order for ₹${order.amount.toLocaleString('en-IN')}`,
+    link: '/orders',
+    meta: { orderId: order._id, code: order.code },
+  });
   sendSuccess(res, { statusCode: 201, message: 'Order placed', data: order });
 });
 

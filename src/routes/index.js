@@ -9,6 +9,7 @@ import transactionRoutes from './transactionRoutes.js';
 import enquiryRoutes from './enquiryRoutes.js';
 import customerRoutes from './customerRoutes.js';
 import dashboardRoutes from './dashboardRoutes.js';
+import notificationRoutes from './notificationRoutes.js';
 import {
   categoryRouter, flavourRouter, occasionRouter, addonRouter, faqRouter, reviewRouter,
 } from './catalogRoutes.js';
@@ -34,6 +35,7 @@ router.use('/transactions', transactionRoutes);
 router.use('/enquiries', enquiryRoutes);
 router.use('/customers', customerRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/notifications', notificationRoutes);
 router.use('/settings', settingsRouter);
 router.use('/newsletter', newsletterRouter);
 router.use('/uploads', uploadRouter);

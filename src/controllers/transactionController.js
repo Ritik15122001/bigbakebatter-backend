@@ -116,18 +116,21 @@ export const getFinanceSummary = asyncHandler(async (_req, res) => {
   });
 });
 
+/** Marks a transaction refunded and cancels its linked order. Shared by the
+ * admin-initiated refund endpoint and the Razorpay `refund.processed` webhook. */
+export async function applyRefund(txn) {
+  txn.status = 'Refunded';
+  txn.refundedAt = new Date();
+  await txn.save();
+  if (txn.order) await Order.findByIdAndUpdate(txn.order, { status: 'Cancelled' });
+  return txn;
+}
+
 export const refundTransaction = asyncHandler(async (req, res) => {
   const txn = await Transaction.findById(req.params.id);
   if (!txn) throw ApiError.notFound('Transaction not found');
   if (txn.status === 'Refunded') throw ApiError.badRequest('This transaction is already refunded');
 
-  txn.status = 'Refunded';
-  txn.refundedAt = new Date();
-  await txn.save();
-
-  if (txn.order) {
-    await Order.findByIdAndUpdate(txn.order, { status: 'Cancelled' });
-  }
-
+  await applyRefund(txn);
   sendSuccess(res, { message: `${txn.txnId} marked refunded`, data: txn });
 });
