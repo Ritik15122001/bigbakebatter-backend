@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import {
-  createOrder, getMyOrders, getMyOrderByCode, listOrders, getOrderByCode, updateOrderStatus,
+  createOrder, getMyOrders, getMyOrderByCode, listOrders, getOrderByCode, getOrderById, updateOrderStatus,
 } from '../controllers/orderController.js';
 import { protect, restrictTo, optionalAuth } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
@@ -13,6 +13,7 @@ router.get('/mine', protect, getMyOrders);
 router.get('/mine/:code', protect, getMyOrderByCode);
 router.get('/track/:code', getOrderByCode);
 router.get('/', protect, restrictTo('admin'), listOrders);
+router.get('/:id', protect, restrictTo('admin'), getOrderById);
 router.patch('/:id/status', protect, restrictTo('admin'), validateBody(updateOrderStatusSchema), updateOrderStatus);
 
 export default router;

@@ -2,6 +2,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { sendSuccess } from '../utils/ApiResponse.js';
 import { Order } from '../models/Order.js';
+import { Transaction } from '../models/Transaction.js';
 import { nextSequence } from '../models/Counter.js';
 import { verifyRazorpaySignature } from './paymentController.js';
 import { recordTransaction } from './transactionController.js';
@@ -50,6 +51,14 @@ export const getOrderByCode = asyncHandler(async (req, res) => {
   const order = await Order.findOne({ code: req.params.code });
   if (!order) throw ApiError.notFound('Order not found');
   sendSuccess(res, { data: order });
+});
+
+/** Admin order detail page: the order plus its linked payment record. */
+export const getOrderById = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id);
+  if (!order) throw ApiError.notFound('Order not found');
+  const transaction = await Transaction.findOne({ order: order._id });
+  sendSuccess(res, { data: { order, transaction } });
 });
 
 export const updateOrderStatus = asyncHandler(async (req, res) => {
