@@ -9,6 +9,7 @@ import { Flavour } from '../models/Flavour.js';
 import { Occasion } from '../models/Occasion.js';
 import { Addon } from '../models/Addon.js';
 import { Banner } from '../models/Banner.js';
+import { Announcement } from '../models/Announcement.js';
 import { BlogPost } from '../models/BlogPost.js';
 import { Faq } from '../models/Faq.js';
 import { Review } from '../models/Review.js';
@@ -21,7 +22,7 @@ import { Notification } from '../models/Notification.js';
 
 import {
   products, categories, flavours, occasions, addons, banners, blogPosts,
-  faqs, reviews, setting, customers, orders, enquiries,
+  faqs, reviews, announcements, setting, customers, orders, enquiries,
 } from './seedData.js';
 
 async function run() {
@@ -29,7 +30,7 @@ async function run() {
   console.log('Clearing existing collections...');
   await Promise.all([
     User.deleteMany({}), Product.deleteMany({}), Category.deleteMany({}), Flavour.deleteMany({}),
-    Occasion.deleteMany({}), Addon.deleteMany({}), Banner.deleteMany({}), BlogPost.deleteMany({}),
+    Occasion.deleteMany({}), Addon.deleteMany({}), Banner.deleteMany({}), Announcement.deleteMany({}), BlogPost.deleteMany({}),
     Faq.deleteMany({}), Review.deleteMany({}), Order.deleteMany({}), Enquiry.deleteMany({}),
     Setting.deleteMany({}), Counter.deleteMany({}), Transaction.deleteMany({}), Notification.deleteMany({}),
   ]);
@@ -41,6 +42,7 @@ async function run() {
   await Occasion.insertMany(occasions);
   await Addon.insertMany(addons);
   await Banner.insertMany(banners);
+  await Announcement.insertMany(announcements);
   await BlogPost.insertMany(blogPosts);
   await Faq.insertMany(faqs);
   await Review.insertMany(reviews);

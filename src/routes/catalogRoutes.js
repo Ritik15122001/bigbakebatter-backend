@@ -8,10 +8,16 @@ import { Occasion } from '../models/Occasion.js';
 import { Addon } from '../models/Addon.js';
 import { Faq } from '../models/Faq.js';
 import { Review } from '../models/Review.js';
+import { Announcement } from '../models/Announcement.js';
+import { Product } from '../models/Product.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { ApiError } from '../utils/ApiError.js';
+import { sendSuccess } from '../utils/ApiResponse.js';
 import {
   categorySchema, categoryUpdateSchema, flavourSchema, flavourUpdateSchema,
   occasionSchema, occasionUpdateSchema, addonSchema, addonUpdateSchema,
   faqSchema, faqUpdateSchema, reviewSchema, reviewUpdateSchema,
+  announcementSchema, announcementUpdateSchema,
 } from '../validators/catalogValidators.js';
 
 /** Builds a standard public-read / admin-write router for a simple resource. */
@@ -28,9 +34,45 @@ function simpleResourceRouter(Model, label, createSchema, updateSchema, sort = '
   return router;
 }
 
-export const categoryRouter = simpleResourceRouter(Category, 'Category', categorySchema, categoryUpdateSchema);
+/**
+ * Products and occasions reference a category by its *name*, so renaming a
+ * category must cascade and deleting one that's still in use must be refused.
+ */
+const categoryCrud = crudFactory(Category, { label: 'Category', sort: 'name' });
+
+const renameCascade = asyncHandler(async (req, _res, next) => {
+  const existing = await Category.findById(req.params.id);
+  if (!existing) throw ApiError.notFound('Category not found');
+  const newName = req.body.name?.trim();
+  if (newName && newName !== existing.name) {
+    if (await Category.exists({ name: newName, _id: { $ne: existing._id } })) {
+      throw ApiError.conflict(`A category named "${newName}" already exists`);
+    }
+    await Promise.all([
+      Product.updateMany({ cat: existing.name }, { cat: newName }),
+      Occasion.updateMany({ cat: existing.name }, { cat: newName }),
+    ]);
+  }
+  next();
+});
+
+const guardDelete = asyncHandler(async (req, _res, next) => {
+  const existing = await Category.findById(req.params.id);
+  if (!existing) throw ApiError.notFound('Category not found');
+  const inUse = await Product.countDocuments({ cat: existing.name });
+  if (inUse) throw ApiError.conflict(`${inUse} cake${inUse === 1 ? ' uses' : 's use'} "${existing.name}". Move or delete ${inUse === 1 ? 'it' : 'them'} first.`);
+  next();
+});
+
+export const categoryRouter = Router();
+categoryRouter.get('/', categoryCrud.list);
+categoryRouter.get('/:id', categoryCrud.getOne);
+categoryRouter.post('/', protect, restrictTo('admin'), validateBody(categorySchema), categoryCrud.create);
+categoryRouter.put('/:id', protect, restrictTo('admin'), validateBody(categoryUpdateSchema), renameCascade, categoryCrud.update);
+categoryRouter.delete('/:id', protect, restrictTo('admin'), guardDelete, categoryCrud.remove);
 export const flavourRouter = simpleResourceRouter(Flavour, 'Flavour', flavourSchema, flavourUpdateSchema);
 export const occasionRouter = simpleResourceRouter(Occasion, 'Occasion', occasionSchema, occasionUpdateSchema);
 export const addonRouter = simpleResourceRouter(Addon, 'Addon', addonSchema, addonUpdateSchema);
 export const faqRouter = simpleResourceRouter(Faq, 'FAQ', faqSchema, faqUpdateSchema, 'order');
 export const reviewRouter = simpleResourceRouter(Review, 'Review', reviewSchema, reviewUpdateSchema, '-createdAt');
+export const announcementRouter = simpleResourceRouter(Announcement, 'Announcement', announcementSchema, announcementUpdateSchema, 'order');

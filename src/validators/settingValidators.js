@@ -4,7 +4,7 @@ export const settingUpdateSchema = z.object({
   name: z.string().optional(),
   since: z.coerce.number().optional(),
   phones: z.array(z.string()).optional(),
-  email: z.string().email().optional(),
+  email: z.union([z.string().email(), z.literal('')]).optional(),
   addressFull: z.string().optional(),
   mapsEmbedSrc: z.string().optional(),
   mapsLink: z.string().optional(),

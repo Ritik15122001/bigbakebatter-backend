@@ -273,3 +273,9 @@ export const enquiries = [
   { code: '#CC1024', name: 'Meera Iyer', email: 'meera.i@email.com', phone: '+91 98111 22334', occasion: 'Wedding', date: '26 Aug', guests: '40–60', budget: '₹8,000+', status: 'New',
     note: 'Two-tier cake for about 40 people. White fondant, gold accents, fresh flowers on top. Vanilla and chocolate tiers. Delivery to a venue in Andheri.', files: 2 },
 ];
+
+export const announcements = [
+  { text: 'Freshly baked today · Same-day delivery available', icon: 'sparkles', order: 1 },
+  { text: 'FIRST20 — 20% off your first order', icon: 'percent', order: 2 },
+  { text: '100% Pure Veg & Eggless — every single cake', icon: 'veg', order: 3 },
+];

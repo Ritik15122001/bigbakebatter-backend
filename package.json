@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "seed": "node src/seed/seed.js"
+    "seed": "node src/seed/seed.js",
+    "seed:announcements": "node src/seed/seedAnnouncements.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

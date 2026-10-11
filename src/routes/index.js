@@ -11,7 +11,7 @@ import customerRoutes from './customerRoutes.js';
 import dashboardRoutes from './dashboardRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
 import {
-  categoryRouter, flavourRouter, occasionRouter, addonRouter, faqRouter, reviewRouter,
+  categoryRouter, flavourRouter, occasionRouter, addonRouter, faqRouter, reviewRouter, announcementRouter,
 } from './catalogRoutes.js';
 import { settingsRouter, newsletterRouter, uploadRouter } from './miscRoutes.js';
 
@@ -27,6 +27,7 @@ router.use('/occasions', occasionRouter);
 router.use('/addons', addonRouter);
 router.use('/faqs', faqRouter);
 router.use('/reviews', reviewRouter);
+router.use('/announcements', announcementRouter);
 router.use('/banners', bannerRoutes);
 router.use('/blog', blogRoutes);
 router.use('/orders', orderRoutes);

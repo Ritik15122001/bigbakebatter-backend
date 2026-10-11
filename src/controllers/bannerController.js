@@ -10,7 +10,7 @@ export const listBanners = asyncHandler(async (_req, res) => {
 
 export const getLiveBanners = asyncHandler(async (_req, res) => {
   const banners = await Banner.find({ status: 'Published' }).sort('order');
-  sendSuccess(res, { data: banners.length ? banners : await Banner.find().sort('order').limit(1) });
+  sendSuccess(res, { data: banners });
 });
 
 export const createBanner = asyncHandler(async (req, res) => {

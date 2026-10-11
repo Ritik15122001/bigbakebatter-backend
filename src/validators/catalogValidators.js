@@ -48,3 +48,12 @@ export const reviewSchema = z.object({
   text: z.string().min(1),
 });
 export const reviewUpdateSchema = reviewSchema.partial();
+
+export const announcementSchema = z.object({
+  text: z.string().min(1),
+  icon: z.string().optional().default('sparkles'),
+  link: z.string().optional().default(''),
+  active: z.coerce.boolean().optional().default(true),
+  order: z.coerce.number().optional().default(0),
+});
+export const announcementUpdateSchema = announcementSchema.partial();
