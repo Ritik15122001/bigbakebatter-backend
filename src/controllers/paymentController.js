@@ -6,17 +6,27 @@ import { razorpay } from '../config/razorpay.js';
 import { Transaction } from '../models/Transaction.js';
 import { applyRefund } from './transactionController.js';
 import { notify } from './notificationController.js';
+import { priceCart } from '../utils/pricing.js';
+
+/** Prices the cart server-side (items, promo, delivery) without charging — used by cart/checkout to show totals. */
+export const quoteCart = asyncHandler(async (req, res) => {
+  const { items, promoCode, email } = req.body;
+  const quote = await priceCart(items, { promoCode, email, userId: req.user?._id });
+  sendSuccess(res, { data: quote });
+});
 
 export const createRazorpayOrder = asyncHandler(async (req, res) => {
-  const { amount } = req.body;
+  const { items, promoCode, email } = req.body;
+  const quote = await priceCart(items, { promoCode, email, userId: req.user?._id });
+  if (quote.total < 1) throw ApiError.badRequest('Order total must be at least ₹1');
   const order = await razorpay.orders.create({
-    amount: Math.round(amount * 100), // paise
+    amount: Math.round(quote.total * 100), // paise — computed by the server, never by the client
     currency: 'INR',
     receipt: `rcpt_${Date.now()}`,
   });
   sendSuccess(res, {
     statusCode: 201,
-    data: { orderId: order.id, amount: order.amount, currency: order.currency, keyId: process.env.RAZORPAY_KEY_ID },
+    data: { orderId: order.id, amount: order.amount, currency: order.currency, keyId: process.env.RAZORPAY_KEY_ID, quote },
   });
 });
 
@@ -26,9 +36,15 @@ export function verifyRazorpaySignature({ razorpayOrderId, razorpayPaymentId, ra
     .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
     .update(`${razorpayOrderId}|${razorpayPaymentId}`)
     .digest('hex');
-  if (expected !== razorpaySignature) {
+  if (!razorpaySignature || !safeEqual(expected, razorpaySignature)) {
     throw ApiError.badRequest('Payment verification failed');
   }
+}
+
+function safeEqual(a, b) {
+  const ab = Buffer.from(String(a));
+  const bb = Buffer.from(String(b));
+  return ab.length === bb.length && crypto.timingSafeEqual(ab, bb);
 }
 
 /**
@@ -49,9 +65,11 @@ export const handleRazorpayWebhook = asyncHandler(async (req, res) => {
 
   if (secret) {
     const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
-    if (!signature || expected !== signature) {
+    if (!signature || !safeEqual(expected, signature)) {
       return res.status(400).json({ success: false, message: 'Invalid webhook signature' });
     }
+  } else if (process.env.NODE_ENV === 'production') {
+    return res.status(503).json({ success: false, message: 'Webhook secret not configured' });
   } else {
     // No secret configured yet (e.g. local dev before the webhook is set up
     // in the Razorpay dashboard) — process the event but skip verification

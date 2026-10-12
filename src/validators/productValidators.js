@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { zBool } from './common.js';
 
 export const productSchema = z.object({
   name: z.string().min(2),
@@ -12,9 +13,9 @@ export const productSchema = z.object({
   rating: z.coerce.number().min(0).max(5).optional().default(0),
   reviews: z.coerce.number().optional().default(0),
   sold: z.coerce.number().optional().default(0),
-  eggless: z.coerce.boolean().optional().default(true),
-  veg: z.coerce.boolean().optional().default(true),
-  corporate: z.coerce.boolean().optional().default(false),
+  eggless: zBool().optional().default(true),
+  veg: zBool().optional().default(true),
+  corporate: zBool().optional().default(false),
   desc: z.string().optional().default(''),
   img: z.array(z.string()).optional().default([]),
   ph: z.array(z.string()).optional().default([]),

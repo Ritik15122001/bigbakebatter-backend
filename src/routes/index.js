@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import authRoutes from './authRoutes.js';
 import productRoutes from './productRoutes.js';
 import bannerRoutes from './bannerRoutes.js';
@@ -11,13 +12,18 @@ import customerRoutes from './customerRoutes.js';
 import dashboardRoutes from './dashboardRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
 import {
-  categoryRouter, flavourRouter, occasionRouter, addonRouter, faqRouter, reviewRouter, announcementRouter,
+  categoryRouter, flavourRouter, occasionRouter, addonRouter, faqRouter, reviewRouter, announcementRouter, addonCategoryRouter,
 } from './catalogRoutes.js';
+import contentRoutes from './contentRoutes.js';
+import couponRoutes from './couponRoutes.js';
 import { settingsRouter, newsletterRouter, uploadRouter } from './miscRoutes.js';
 
 const router = Router();
 
-router.get('/health', (_req, res) => res.json({ success: true, message: 'API is up' }));
+router.get('/health', (_req, res) => {
+  const dbUp = mongoose.connection.readyState === 1;
+  res.status(dbUp ? 200 : 503).json({ success: dbUp, message: dbUp ? 'API is up' : 'Database unavailable' });
+});
 
 router.use('/auth', authRoutes);
 router.use('/products', productRoutes);
@@ -28,6 +34,9 @@ router.use('/addons', addonRouter);
 router.use('/faqs', faqRouter);
 router.use('/reviews', reviewRouter);
 router.use('/announcements', announcementRouter);
+router.use('/addon-categories', addonCategoryRouter);
+router.use('/content', contentRoutes);
+router.use('/coupons', couponRoutes);
 router.use('/banners', bannerRoutes);
 router.use('/blog', blogRoutes);
 router.use('/orders', orderRoutes);

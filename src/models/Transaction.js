@@ -23,6 +23,7 @@ const transactionSchema = new mongoose.Schema(
 );
 
 transactionSchema.index({ paidAt: -1 });
+transactionSchema.index({ razorpayPaymentId: 1 });
 transactionSchema.index({ user: 1, paidAt: -1 });
 
 export const TRANSACTION_STATUSES = STATUSES;

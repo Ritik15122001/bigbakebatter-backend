@@ -10,13 +10,20 @@ export const getSettings = asyncHandler(async (_req, res) => {
 });
 
 export const updateSettings = asyncHandler(async (req, res) => {
-  const settings = await Setting.findOneAndUpdate({ key: 'business' }, req.body, { new: true, upsert: true, runValidators: true });
+  const { social, festival, ...rest } = req.body;
+  const update = { ...rest };
+  // Dotted keys so saving one social link / festival option doesn't wipe the others.
+  for (const [k, v] of Object.entries(social || {})) update[`social.${k}`] = v;
+  const { effects, ...festivalRest } = festival || {};
+  for (const [k, v] of Object.entries(festivalRest)) update[`festival.${k}`] = v;
+  for (const [k, v] of Object.entries(effects || {})) update[`festival.effects.${k}`] = v;
+  const settings = await Setting.findOneAndUpdate({ key: 'business' }, { $set: update }, { new: true, upsert: true, runValidators: true });
   sendSuccess(res, { message: 'Settings updated', data: settings });
 });
 
 export const subscribeNewsletter = asyncHandler(async (req, res) => {
-  const { email } = req.body;
-  if (!email || !email.includes('@')) throw ApiError.badRequest('Enter a valid email');
+  const email = typeof req.body?.email === 'string' ? req.body.email.trim() : '';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw ApiError.badRequest('Enter a valid email');
   await Subscriber.findOneAndUpdate({ email: email.toLowerCase() }, { email }, { upsert: true });
   sendSuccess(res, { message: "You're subscribed", data: { email } });
 });

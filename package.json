@@ -5,11 +5,14 @@
   "type": "module",
   "description": "REST API for BigBakeBatter — products, orders, blog, banners, enquiries, auth.",
   "main": "server.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
     "seed": "node src/seed/seed.js",
-    "seed:announcements": "node src/seed/seedAnnouncements.js"
+    "migrate": "node src/seed/migrate.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

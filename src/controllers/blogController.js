@@ -17,7 +17,9 @@ export const getPublishedPosts = asyncHandler(async (req, res) => {
 });
 
 export const getPost = asyncHandler(async (req, res) => {
-  const post = await BlogPost.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }, { new: true });
+  // Drafts are only visible to admins.
+  const filter = { _id: req.params.id, ...(req.user?.role === 'admin' ? {} : { status: 'Published' }) };
+  const post = await BlogPost.findOneAndUpdate(filter, { $inc: { views: 1 } }, { new: true });
   if (!post) throw ApiError.notFound('Article not found');
   sendSuccess(res, { data: post });
 });

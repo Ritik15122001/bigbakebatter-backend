@@ -12,14 +12,16 @@ export const getDashboardStats = asyncHandler(async (_req, res) => {
     Enquiry.find({ status: 'New' }).sort('-createdAt'),
   ]);
 
-  const totalRevenue = orders.reduce((sum, o) => sum + o.amount, 0);
-  const aov = orders.length ? Math.round(totalRevenue / orders.length) : 0;
+  // Cancelled orders are refunded/void, so they don't count towards revenue.
+  const live = orders.filter((o) => o.status !== 'Cancelled');
+  const totalRevenue = live.reduce((sum, o) => sum + o.amount, 0);
+  const aov = live.length ? Math.round(totalRevenue / live.length) : 0;
   const newOrdersCount = orders.filter((o) => o.status === 'New').length;
 
   sendSuccess(res, {
     data: {
       totalRevenue,
-      totalOrders: orders.length,
+      totalOrders: live.length,
       aov,
       newOrdersCount,
       recentOrders: orders.slice(0, 6),

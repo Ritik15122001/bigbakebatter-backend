@@ -4,6 +4,7 @@ import { sendSuccess } from '../utils/ApiResponse.js';
 import { Transaction } from '../models/Transaction.js';
 import { Order } from '../models/Order.js';
 import { nextSequence } from '../models/Counter.js';
+import { escapeRegex } from '../utils/escapeRegex.js';
 
 /** Writes the payment record for a freshly paid order. */
 export async function recordTransaction(order) {
@@ -40,12 +41,13 @@ export const listTransactions = asyncHandler(async (req, res) => {
     if (to) filter.paidAt.$lte = new Date(`${to}T23:59:59.999Z`);
   }
   if (q) {
+    const rx = { $regex: escapeRegex(q), $options: 'i' };
     filter.$or = [
-      { txnId: { $regex: q, $options: 'i' } },
-      { orderCode: { $regex: q, $options: 'i' } },
-      { customer: { $regex: q, $options: 'i' } },
-      { email: { $regex: q, $options: 'i' } },
-      { razorpayPaymentId: { $regex: q, $options: 'i' } },
+      { txnId: rx },
+      { orderCode: rx },
+      { customer: rx },
+      { email: rx },
+      { razorpayPaymentId: rx },
     ];
   }
   const transactions = await Transaction.find(filter).sort('-paidAt');
@@ -129,7 +131,7 @@ export async function applyRefund(txn) {
 export const refundTransaction = asyncHandler(async (req, res) => {
   const txn = await Transaction.findById(req.params.id);
   if (!txn) throw ApiError.notFound('Transaction not found');
-  if (txn.status === 'Refunded') throw ApiError.badRequest('This transaction is already refunded');
+  if (txn.status !== 'Paid') throw ApiError.badRequest(`Only paid transactions can be refunded (this one is ${txn.status})`);
 
   await applyRefund(txn);
   sendSuccess(res, { message: `${txn.txnId} marked refunded`, data: txn });

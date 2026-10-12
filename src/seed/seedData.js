@@ -111,9 +111,9 @@ export const products = rawProducts.map((p) => ({
 export const categories = [
   { name: 'Birthday', icon: 'party', active: true },
   { name: 'Anniversary', icon: 'heart', active: true },
-  { name: 'Cupcakes', icon: 'bowl', active: true },
+  { name: 'Cupcakes', icon: 'bowl', active: true, isBox: true },
   { name: 'Cheesecakes', icon: 'slice', active: true },
-  { name: 'Brownies', icon: 'cookie', active: true },
+  { name: 'Brownies', icon: 'cookie', active: true, isBox: true },
   { name: 'Eggless', icon: 'eggoff', active: true },
   { name: 'Tea Cakes', icon: 'sun', active: true },
   { name: 'Jar Desserts', icon: 'bowl', active: true },
@@ -278,4 +278,17 @@ export const announcements = [
   { text: 'Freshly baked today · Same-day delivery available', icon: 'sparkles', order: 1 },
   { text: 'FIRST20 — 20% off your first order', icon: 'percent', order: 2 },
   { text: '100% Pure Veg & Eggless — every single cake', icon: 'veg', order: 3 },
+];
+
+// Tabs in the add-ons modal. "popular" is a virtual tab driven by Addon.popular.
+export const addonCategories = [
+  { key: 'toppers', label: 'Cake Toppers', icon: 'gift', order: 1 },
+  { key: 'candles', label: 'Candles', icon: 'sparkles', order: 2 },
+  { key: 'party', label: 'Party Essentials', icon: 'party', order: 3 },
+  { key: 'chocolates', label: 'Chocolates', icon: 'cookie', order: 4 },
+  { key: 'more', label: 'More Addons', icon: 'plus', order: 5 },
+];
+
+export const coupons = [
+  { code: 'FIRST20', pct: 20, description: '20% off your first order', firstOrderOnly: true, active: true },
 ];

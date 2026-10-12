@@ -1,19 +1,23 @@
 import { z } from 'zod';
 
-const orderItemSchema = z.object({
-  pid: z.string().optional(),
-  name: z.string().min(1),
+// Prices are never taken from the client — the server re-prices every line
+// from the database (see utils/pricing.js).
+export const cartItemSchema = z.object({
+  pid: z.string().min(1),
+  name: z.string().optional().default(''),
   weight: z.string().optional().default(''),
-  qty: z.coerce.number().min(1),
-  line: z.coerce.number().min(0),
+  qty: z.coerce.number().int().min(1).max(50),
+  isAddon: z.boolean().optional().default(false),
+  eggless: z.boolean().optional().default(false),
+  msg: z.string().max(120).optional().default(''),
 });
 
 export const createOrderSchema = z.object({
   customer: z.string().min(1),
   email: z.string().email(),
   phone: z.string().min(6),
-  items: z.array(orderItemSchema).min(1, 'Order must have at least one item'),
-  amount: z.coerce.number().min(0),
+  items: z.array(cartItemSchema).min(1, 'Order must have at least one item').max(50),
+  promoCode: z.string().optional().default(''),
   slot: z.string().min(1, 'Select a delivery slot'),
   deliver: z.string().min(1, 'Select a delivery date'),
   addr: z.string().min(1, 'Delivery address is required'),

@@ -10,6 +10,9 @@ import { Occasion } from '../models/Occasion.js';
 import { Addon } from '../models/Addon.js';
 import { Banner } from '../models/Banner.js';
 import { Announcement } from '../models/Announcement.js';
+import { AddonCategory } from '../models/AddonCategory.js';
+import { Coupon } from '../models/Coupon.js';
+import { SiteContent } from '../models/SiteContent.js';
 import { BlogPost } from '../models/BlogPost.js';
 import { Faq } from '../models/Faq.js';
 import { Review } from '../models/Review.js';
@@ -22,15 +25,23 @@ import { Notification } from '../models/Notification.js';
 
 import {
   products, categories, flavours, occasions, addons, banners, blogPosts,
-  faqs, reviews, announcements, setting, customers, orders, enquiries,
+  faqs, reviews, announcements, addonCategories, coupons, setting, customers, orders, enquiries,
 } from './seedData.js';
 
 async function run() {
+  // This script WIPES every collection. Refuse to touch a hosted/production DB unless forced.
+  const uri = process.env.MONGO_URI || '';
+  const looksLive = uri.startsWith('mongodb+srv://') || process.env.NODE_ENV === 'production';
+  if (looksLive && !process.argv.includes('--force')) {
+    console.error('Refusing to seed: MONGO_URI looks like a hosted/production database and this script deletes ALL data.');
+    console.error('If you really mean it, run: node src/seed/seed.js --force');
+    process.exit(1);
+  }
   await connectDB();
   console.log('Clearing existing collections...');
   await Promise.all([
     User.deleteMany({}), Product.deleteMany({}), Category.deleteMany({}), Flavour.deleteMany({}),
-    Occasion.deleteMany({}), Addon.deleteMany({}), Banner.deleteMany({}), Announcement.deleteMany({}), BlogPost.deleteMany({}),
+    Occasion.deleteMany({}), Addon.deleteMany({}), Banner.deleteMany({}), Announcement.deleteMany({}), AddonCategory.deleteMany({}), Coupon.deleteMany({}), SiteContent.deleteMany({}), BlogPost.deleteMany({}),
     Faq.deleteMany({}), Review.deleteMany({}), Order.deleteMany({}), Enquiry.deleteMany({}),
     Setting.deleteMany({}), Counter.deleteMany({}), Transaction.deleteMany({}), Notification.deleteMany({}),
   ]);
@@ -43,6 +54,8 @@ async function run() {
   await Addon.insertMany(addons);
   await Banner.insertMany(banners);
   await Announcement.insertMany(announcements);
+  await AddonCategory.insertMany(addonCategories);
+  await Coupon.insertMany(coupons);
   await BlogPost.insertMany(blogPosts);
   await Faq.insertMany(faqs);
   await Review.insertMany(reviews);
@@ -144,7 +157,7 @@ async function run() {
   console.log(`  ${products.length} products, ${categories.length} categories, ${banners.length} banners`);
   console.log(`  ${blogPosts.length} blog posts, ${orders.length} orders, ${enquiries.length} enquiries`);
   console.log(`  ${customers.length} customers, 1 admin, ${orders.length} transactions`);
-  console.log(`\nAdmin login: ${adminEmail} / ${adminPassword}`);
+  console.log(`\nAdmin login: ${adminEmail} (password from SEED_ADMIN_PASSWORD or the default — change it after first login)`);
   console.log('Customer login (any seeded customer email) / Customer@123');
 
   await mongoose.disconnect();

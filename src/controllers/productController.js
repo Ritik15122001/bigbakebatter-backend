@@ -2,6 +2,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { sendSuccess } from '../utils/ApiResponse.js';
 import { Product } from '../models/Product.js';
+import { escapeRegex } from '../utils/escapeRegex.js';
 
 const PRICE_BANDS = {
   lt600: { base: { $lt: 600 } },
@@ -17,7 +18,7 @@ export const listProducts = asyncHandler(async (req, res) => {
 
   if (q) filter.$text = { $search: q };
   if (cats) filter.cat = { $in: cats.split(',') };
-  if (flavs) filter.flavour = { $regex: flavs.split(',').join('|'), $options: 'i' };
+  if (flavs) filter.flavour = { $regex: flavs.split(',').map(escapeRegex).join('|'), $options: 'i' };
   if (avail?.includes('in')) filter.stock = { $ne: 'Out of stock' };
   if (avail?.includes('eggless')) filter.eggless = true;
   if (price) {
@@ -53,7 +54,8 @@ export const deleteProduct = asyncHandler(async (req, res) => {
 });
 
 export const adjustStock = asyncHandler(async (req, res) => {
-  const { delta } = req.body;
+  const delta = Number(req.body?.delta);
+  if (!Number.isFinite(delta)) throw ApiError.badRequest('delta must be a number');
   const product = await Product.findById(req.params.id);
   if (!product) throw ApiError.notFound('Cake not found');
   product.qty = Math.max(0, product.qty + Number(delta));
