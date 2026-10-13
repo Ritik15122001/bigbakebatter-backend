@@ -43,7 +43,7 @@ export const deletePost = asyncHandler(async (req, res) => {
 });
 
 export const listComments = asyncHandler(async (req, res) => {
-  const comments = await Comment.find({ post: req.params.id }).sort('-createdAt');
+  const comments = await Comment.find({ post: req.params.id, hidden: { $ne: true } }).sort('-createdAt');
   sendSuccess(res, { data: comments });
 });
 

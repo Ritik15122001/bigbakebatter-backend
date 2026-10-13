@@ -28,6 +28,18 @@ export const getMyEnquiries = asyncHandler(async (req, res) => {
   sendSuccess(res, { data: enquiries });
 });
 
+export const updateEnquiry = asyncHandler(async (req, res) => {
+  const enquiry = await Enquiry.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+  if (!enquiry) throw ApiError.notFound('Enquiry not found');
+  sendSuccess(res, { message: 'Enquiry updated', data: enquiry });
+});
+
+export const deleteEnquiry = asyncHandler(async (req, res) => {
+  const enquiry = await Enquiry.findByIdAndDelete(req.params.id);
+  if (!enquiry) throw ApiError.notFound('Enquiry not found');
+  sendSuccess(res, { message: `Enquiry ${enquiry.code} deleted`, data: enquiry });
+});
+
 export const updateEnquiryStatus = asyncHandler(async (req, res) => {
   const enquiry = await Enquiry.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
   if (!enquiry) throw ApiError.notFound('Enquiry not found');

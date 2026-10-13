@@ -21,6 +21,8 @@ const userSchema = new mongoose.Schema(
     addresses: { type: [addressSchema], default: [] },
     passwordHash: { type: String, required: true, select: false },
     role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
+    blocked: { type: Boolean, default: false }, // blocked accounts can't sign in or place orders while signed in
+    passwordChangedAt: { type: Date },
   },
   { timestamps: true }
 );

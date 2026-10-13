@@ -6,6 +6,7 @@ const commentSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     name: { type: String, required: true, trim: true },
     text: { type: String, required: true, trim: true },
+    hidden: { type: Boolean, default: false }, // hidden by an admin — not shown on the site
   },
   { timestamps: true }
 );

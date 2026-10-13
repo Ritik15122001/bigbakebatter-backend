@@ -18,6 +18,10 @@ export const protect = asyncHandler(async (req, _res, next) => {
 
   const user = await User.findById(payload.id);
   if (!user) throw ApiError.unauthorized('Account no longer exists');
+  if (user.blocked) throw ApiError.forbidden('This account has been blocked');
+  if (user.passwordChangedAt && payload.iat * 1000 < user.passwordChangedAt.getTime()) {
+    throw ApiError.unauthorized('Your password was changed. Please sign in again.');
+  }
 
   req.user = user;
   next();

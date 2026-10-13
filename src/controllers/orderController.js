@@ -39,6 +39,7 @@ export const createOrder = asyncHandler(async (req, res) => {
     razorpayPaymentId,
     code: `#BB${seq}`,
     user: req.user?._id,
+    statusHistory: [{ status: 'New', at: new Date(), by: 'Customer' }],
   });
   await recordTransaction(order);
   await Promise.all(
@@ -92,8 +93,19 @@ export const getOrderById = asyncHandler(async (req, res) => {
   sendSuccess(res, { data: { order, transaction } });
 });
 
+/** Admin edits to delivery details / internal note (prices and items are never editable). */
+export const updateOrderDetails = asyncHandler(async (req, res) => {
+  const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+  if (!order) throw ApiError.notFound('Order not found');
+  sendSuccess(res, { message: `Order ${order.code} updated`, data: order });
+});
+
 export const updateOrderStatus = asyncHandler(async (req, res) => {
-  const order = await Order.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
+  const order = await Order.findByIdAndUpdate(
+    req.params.id,
+    { status: req.body.status, $push: { statusHistory: { status: req.body.status, at: new Date(), by: req.user?.name || 'Admin' } } },
+    { new: true }
+  );
   if (!order) throw ApiError.notFound('Order not found');
   sendSuccess(res, { message: `Order marked ${order.status}`, data: order });
 });

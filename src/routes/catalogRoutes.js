@@ -87,7 +87,13 @@ export const flavourRouter = simpleResourceRouter(Flavour, 'Flavour', flavourSch
 export const occasionRouter = simpleResourceRouter(Occasion, 'Occasion', occasionSchema, occasionUpdateSchema);
 export const addonRouter = simpleResourceRouter(Addon, 'Addon', addonSchema, addonUpdateSchema);
 export const faqRouter = simpleResourceRouter(Faq, 'FAQ', faqSchema, faqUpdateSchema, 'order');
-export const reviewRouter = simpleResourceRouter(Review, 'Review', reviewSchema, reviewUpdateSchema, '-createdAt');
+// ?product=<id> returns that cake's reviews (newest first); no param = all reviews.
+const listReviews = asyncHandler(async (req, res) => {
+  const { product } = req.query;
+  const filter = product && /^[a-f\d]{24}$/i.test(product) ? { product } : {};
+  sendSuccess(res, { data: await Review.find(filter).sort('-createdAt') });
+});
+export const reviewRouter = simpleResourceRouter(Review, 'Review', reviewSchema, reviewUpdateSchema, '-createdAt', [listReviews]);
 // Public visitors only get active messages; admins (with a token) see all.
 const listAnnouncements = asyncHandler(async (req, res) => {
   const filter = req.user?.role === 'admin' ? {} : { active: true };

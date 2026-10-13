@@ -33,8 +33,9 @@ const boxed = await Category.updateMany({ name: { $in: ['Brownies', 'Cupcakes'] 
 console.log(`- categories: marked ${boxed.modifiedCount} as box-style`);
 
 // Build the new indexes (unique payment id on orders, etc.).
-for (const Model of [Order, Transaction, Product, Category, AddonCategory, Coupon, SiteContent]) await Model.syncIndexes();
-console.log('- indexes: synced');
+// createIndexes only adds missing indexes (syncIndexes would also drop any not in the schema).
+for (const Model of [Order, Transaction, Product, Category, AddonCategory, Coupon, SiteContent]) await Model.createIndexes();
+console.log('- indexes: created (existing ones untouched)');
 
 await mongoose.disconnect();
 console.log('Migration complete.');

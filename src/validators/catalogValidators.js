@@ -49,6 +49,7 @@ export const reviewSchema = z.object({
   occ: z.string().optional().default(''),
   rating: z.coerce.number().min(1).max(5),
   text: z.string().min(1),
+  product: z.union([z.string().regex(/^[a-f\d]{24}$/i, 'Invalid cake'), z.literal(''), z.null()]).optional().transform((v) => v || null),
 });
 export const reviewUpdateSchema = reviewSchema.partial();
 

@@ -16,6 +16,7 @@ import {
 } from './catalogRoutes.js';
 import contentRoutes from './contentRoutes.js';
 import couponRoutes from './couponRoutes.js';
+import adminRoutes from './adminRoutes.js';
 import { settingsRouter, newsletterRouter, uploadRouter } from './miscRoutes.js';
 
 const router = Router();
@@ -37,6 +38,7 @@ router.use('/announcements', announcementRouter);
 router.use('/addon-categories', addonCategoryRouter);
 router.use('/content', contentRoutes);
 router.use('/coupons', couponRoutes);
+router.use('/admin', adminRoutes);
 router.use('/banners', bannerRoutes);
 router.use('/blog', blogRoutes);
 router.use('/orders', orderRoutes);

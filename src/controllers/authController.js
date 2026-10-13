@@ -27,6 +27,7 @@ export const login = asyncHandler(async (req, res) => {
   if (!user || !(await user.comparePassword(password))) {
     throw ApiError.unauthorized('Incorrect email or password');
   }
+  if (user.blocked) throw ApiError.forbidden('This account has been blocked. Please contact us.');
 
   sendSuccess(res, { message: 'Signed in', data: { user, token: generateToken(user) } });
 });
@@ -52,8 +53,10 @@ export const changePassword = asyncHandler(async (req, res) => {
     throw ApiError.unauthorized('Your current password is incorrect');
   }
   user.passwordHash = await User.hashPassword(newPassword);
+  user.passwordChangedAt = new Date(Date.now() - 1000);
   await user.save();
-  sendSuccess(res, { message: 'Password updated' });
+  // Other sessions are signed out; return a fresh token for this one.
+  sendSuccess(res, { message: 'Password updated', data: { token: generateToken(user) } });
 });
 
 /** Keeps exactly one default address and mirrors it onto the legacy `addr` field. */

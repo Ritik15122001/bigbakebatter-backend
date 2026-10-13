@@ -14,6 +14,8 @@ const enquirySchema = new mongoose.Schema(
     note: { type: String, default: '' },
     files: { type: Number, default: 0 },
     status: { type: String, enum: ['New', 'Quoted', 'Closed'], default: 'New' },
+    adminNote: { type: String, default: '' }, // internal, never shown to the customer
+    quote: { type: Number, default: null, min: 0 }, // quoted price in rupees
   },
   { timestamps: true }
 );

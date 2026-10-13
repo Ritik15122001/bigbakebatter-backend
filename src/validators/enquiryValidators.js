@@ -12,6 +12,12 @@ export const createEnquirySchema = z.object({
   files: z.coerce.number().optional().default(0),
 });
 
+export const updateEnquirySchema = z.object({
+  status: z.enum(['New', 'Quoted', 'Closed']).optional(),
+  adminNote: z.string().max(2000).optional(),
+  quote: z.union([z.coerce.number().min(0), z.literal(''), z.null()]).optional().transform((v) => (v === '' ? null : v)),
+});
+
 export const updateEnquiryStatusSchema = z.object({
   status: z.enum(['New', 'Quoted', 'Closed']),
 });

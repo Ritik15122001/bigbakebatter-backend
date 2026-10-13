@@ -29,6 +29,16 @@ export const createOrderSchema = z.object({
   razorpaySignature: z.string().min(1, 'Payment is required'),
 });
 
+export const updateOrderDetailsSchema = z.object({
+  customer: z.string().trim().min(1).optional(),
+  phone: z.string().trim().min(6).optional(),
+  addr: z.string().trim().min(1).optional(),
+  deliver: z.string().trim().min(1).optional(),
+  slot: z.string().trim().min(1).optional(),
+  msg: z.string().max(200).optional(),
+  adminNote: z.string().max(2000).optional(),
+});
+
 export const updateOrderStatusSchema = z.object({
   status: z.enum(['New', 'Baking', 'Out for delivery', 'Delivered', 'Cancelled']),
 });
