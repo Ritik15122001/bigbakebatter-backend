@@ -142,9 +142,12 @@ export const createShiprocketShipment = asyncHandler(async (req, res) => {
     billing_email: order.email,
     billing_phone: order.phone,
     shipping_is_billing: true,
-    order_items: order.items.map((i) => ({
+    // SKU must be unique per line — two lines can share a product (e.g. the same
+    // cake at two weights), so the line index is appended to avoid Shiprocket's
+    // "SKU cannot be repeated" rejection.
+    order_items: order.items.map((i, idx) => ({
       name: i.name,
-      sku: String(i.pid || i.name).slice(0, 50),
+      sku: `${String(i.pid || i.name).slice(0, 40)}-${idx}`,
       units: i.qty,
       selling_price: i.unit,
     })),
