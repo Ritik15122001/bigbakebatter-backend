@@ -50,8 +50,18 @@ export const reviewSchema = z.object({
   rating: z.coerce.number().min(1).max(5),
   text: z.string().min(1),
   product: z.union([z.string().regex(/^[a-f\d]{24}$/i, 'Invalid cake'), z.literal(''), z.null()]).optional().transform((v) => v || null),
+  status: z.enum(['Published', 'Pending', 'Hidden']).optional(),
 });
 export const reviewUpdateSchema = reviewSchema.partial();
+
+/** A signed-in customer reviewing a cake from one of their delivered orders. */
+export const customerReviewSchema = z.object({
+  order: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid order'),
+  product: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid cake'),
+  rating: z.coerce.number().int().min(1, 'Pick 1 to 5 stars').max(5, 'Pick 1 to 5 stars'),
+  text: z.string().trim().min(10, 'Tell us a little more (at least 10 characters)').max(1000, 'Keep it under 1000 characters'),
+  occ: z.string().trim().max(40).optional().default(''),
+});
 
 export const announcementSchema = z.object({
   text: z.string().trim().min(1).max(160),

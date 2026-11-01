@@ -138,7 +138,7 @@ export const SECTIONS = [
     defaults: {
       kicker: 'Handpicked',
       title: "This week's featured cakes",
-      sub: 'Four bakes our kitchen is particularly proud of right now.',
+      sub: 'Bakes our kitchen is particularly proud of right now — swipe to see them all.',
       linkLabel: 'View all cakes',
       linkTo: '/shop',
     },
@@ -355,7 +355,7 @@ export const SECTIONS = [
       list('companyLinks', 'Second column links', linkItem, 'label'),
       text('helpHeading', 'Third column heading'),
       list('helpLinks', 'Third column links', linkItem, 'label'),
-      text('copyright', 'Copyright line'),
+      text('copyright', 'Copyright line', 'Use {year} for the current year — it updates automatically.'),
       list('paymentMarks', 'Payment methods shown', labelItem, 'label'),
     ],
     defaults: {
@@ -379,7 +379,7 @@ export const SECTIONS = [
         { label: 'Privacy policy', to: '/privacy' },
         { label: 'Terms & conditions', to: '/terms' },
       ],
-      copyright: '© 2026 BigBakeBatter. All rights reserved.',
+      copyright: '© {year} BigBakeBatter. All rights reserved.',
       paymentMarks: [{ label: 'UPI' }, { label: 'VISA' }, { label: 'Mastercard' }, { label: 'Net Banking' }],
     },
   },
@@ -579,6 +579,13 @@ export const SECTIONS = [
     fields: [
       text('title', 'Heading'),
       text('intro', 'Intro'),
+      text('eyebrow', 'Small label above the heading'),
+      list('process', 'How it works (card beside the heading)', [text('text', 'Step')], 'text', 'Shown as numbered steps 01, 02, 03… Leave empty to hide the card.'),
+      list('heroImages', 'Slideshow photos (right of the form)', [image('image', 'Photo'), text('alt', 'Photo description', ALT_HINT)], 'alt'),
+      text('kicker', 'Slideshow — small heading', KICKER_HINT),
+      text('slideTitle', 'Slideshow — heading'),
+      textarea('slideText', 'Slideshow — text'),
+      list('perks', 'Slideshow — highlights', [icon('icon', 'Icon'), text('text', 'Text')], 'text'),
       list(
         'steps', 'Steps',
         [text('label', 'Step name'), text('question', 'Question shown on this step')],
@@ -596,6 +603,22 @@ export const SECTIONS = [
     defaults: {
       title: 'Create your custom cake',
       intro: 'Tell us your idea — our bakers design and quote it within 24 hours.',
+      eyebrow: 'Custom cakes',
+      process: [{ text: 'Send your idea' }, { text: 'Design & quote in 24h' }, { text: 'Approve and we bake' }],
+      heroImages: [
+        { image: IMG('photo-1562777717-dc6984f65a63'), alt: 'Hand-piped floral buttercream cake' },
+        { image: IMG('photo-1535141192574-5d4897c12636'), alt: 'Custom celebration cake' },
+        { image: IMG('photo-1563729784474-d77dbb933a9e'), alt: 'Custom cake made to order' },
+      ],
+      kicker: 'Made just for you',
+      slideTitle: 'Your idea, baked from scratch',
+      slideText: 'Themes, tiers, photo prints or a flavour you can’t find anywhere else — tell us what you have in mind and our bakers will design it with you.',
+      perks: [
+        { icon: 'edit', text: 'Free design consultation' },
+        { icon: 'eggoff', text: 'Eggless on request' },
+        { icon: 'clock', text: 'Quote within 24 hours' },
+        { icon: 'truck', text: 'Delivered across Delhi-NCR' },
+      ],
       steps: [
         { label: 'Occasion', question: "What's the occasion?" },
         { label: 'Date', question: 'When do you need it delivered?' },
@@ -618,6 +641,73 @@ export const SECTIONS = [
       uploadText: 'Click to upload reference photos',
       thanksTitle: 'Thanks, {name}!',
       thanksText: 'Your custom cake enquiry has been sent. Our bakers will get back to you with a design and a quote within 24 hours.',
+    },
+  },
+
+  // ======================================================================
+  // Corporate clients (homepage + corporate page)
+  // ======================================================================
+  {
+    key: 'corporate.clients',
+    group: 'Corporate clients',
+    label: 'Corporate client logos',
+    fields: [
+      text('kicker', 'Small heading', KICKER_HINT),
+      text('title', 'Heading'),
+      textarea('text', 'Text'),
+      list(
+        'clients', 'Clients',
+        [text('name', 'Company name'), image('logo', 'Logo', 'Optional. A PNG or SVG with a transparent background looks best. Without a logo the company name is shown.'), link('url', 'Website', 'Optional. Clicking the logo opens this address.')],
+        'name',
+        'Companies you have baked for. The names shown at first are placeholders — replace them with your real clients. The strip scrolls on its own once there are more than six.'
+      ),
+    ],
+    defaults: {
+      kicker: 'Trusted by teams across Delhi-NCR',
+      title: 'Companies that celebrate with us',
+      text: 'Office birthdays, festive gifting and client thank-yous for these teams.',
+      // Placeholder names (fictional sample companies) — replace with real clients in admin.
+      clients: [
+        { name: 'Contoso', logo: '', url: '' },
+        { name: 'Northwind Traders', logo: '', url: '' },
+        { name: 'Fabrikam', logo: '', url: '' },
+        { name: 'Adventure Works', logo: '', url: '' },
+        { name: 'Tailspin Toys', logo: '', url: '' },
+        { name: 'Woodgrove Bank', logo: '', url: '' },
+        { name: 'Litware', logo: '', url: '' },
+        { name: 'Proseware', logo: '', url: '' },
+      ],
+    },
+  },
+
+  // ======================================================================
+  // Instagram feed (custom cake + corporate pages)
+  // ======================================================================
+  {
+    key: 'instagram.feed',
+    group: 'Instagram feed',
+    label: 'Instagram feed',
+    fields: [
+      text('kicker', 'Small heading', KICKER_HINT),
+      text('title', 'Heading'),
+      text('handle', 'Instagram handle', 'Shown as the account name, e.g. @bigbakebatter. The button links to the Instagram address in Store settings.'),
+      text('buttonLabel', 'Button text'),
+      list('posts', 'Posts', [image('image', 'Photo'), text('caption', 'Caption')], 'caption', 'The first 7 posts are shown. Use your latest Instagram photos.'),
+    ],
+    defaults: {
+      kicker: 'Fresh from our kitchen',
+      title: 'Follow us on Instagram',
+      handle: '@bigbakebatter',
+      buttonLabel: 'Follow on Instagram',
+      posts: [
+        { image: IMG('photo-1578985545062-69928b1d9587'), caption: 'Belgian chocolate truffle, layered and glazed this morning 🍫' },
+        { image: IMG('photo-1586788680434-30d324b2d46f'), caption: 'Red velvet with our cream cheese frosting — a birthday favourite ❤️' },
+        { image: IMG('photo-1565958011703-44f9829ba187'), caption: 'Fresh berry cream cake, sliced and ready to share 🍓' },
+        { image: IMG('photo-1562777717-dc6984f65a63'), caption: 'Floral buttercream cake, piped by hand 🌸' },
+        { image: IMG('photo-1519869325930-281384150729'), caption: 'Sprinkle cupcakes packed for a kids’ party 🧁' },
+        { image: IMG('photo-1621303837174-89787a7d4729'), caption: 'Ice-cream drip cake for a birthday that needed extra fun 🍦' },
+        { image: IMG('photo-1607478900766-efe13248b125'), caption: 'Swirled cupcakes in party colours, frosted to order 🎉' },
+      ],
     },
   },
 

@@ -20,7 +20,9 @@ export function createApp() {
   // Behind Render/Railway/Nginx etc. — needed so rate limits see the real client IP.
   app.set('trust proxy', 1);
 
-  const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map((o) => o.trim().replace(/\/$/, '')).filter(Boolean);
+  // Accept comma- and/or newline-separated origins — env var UIs (e.g. Render) often store
+  // multi-line values with real newlines instead of commas.
+  const allowedOrigins = (process.env.CORS_ORIGINS || '').split(/[,\n\r]+/).map((o) => o.trim().replace(/\/$/, '')).filter(Boolean);
   app.use(
     cors({
       // In production an empty CORS_ORIGINS allows nobody; in dev it allows everything.

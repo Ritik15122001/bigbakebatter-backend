@@ -7,7 +7,8 @@ import { Flavour } from '../models/Flavour.js';
 import { Occasion } from '../models/Occasion.js';
 import { Addon } from '../models/Addon.js';
 import { Faq } from '../models/Faq.js';
-import { Review } from '../models/Review.js';
+import { Review, PUBLIC_REVIEW_FILTER } from '../models/Review.js';
+import { Order } from '../models/Order.js';
 import { Announcement } from '../models/Announcement.js';
 import { AddonCategory } from '../models/AddonCategory.js';
 import { Product } from '../models/Product.js';
@@ -17,7 +18,7 @@ import { sendSuccess } from '../utils/ApiResponse.js';
 import {
   categorySchema, categoryUpdateSchema, flavourSchema, flavourUpdateSchema,
   occasionSchema, occasionUpdateSchema, addonSchema, addonUpdateSchema,
-  faqSchema, faqUpdateSchema, reviewSchema, reviewUpdateSchema,
+  faqSchema, faqUpdateSchema, reviewSchema, reviewUpdateSchema, customerReviewSchema,
   announcementSchema, announcementUpdateSchema, addonCategorySchema, addonCategoryUpdateSchema,
 } from '../validators/catalogValidators.js';
 
@@ -87,13 +88,67 @@ export const flavourRouter = simpleResourceRouter(Flavour, 'Flavour', flavourSch
 export const occasionRouter = simpleResourceRouter(Occasion, 'Occasion', occasionSchema, occasionUpdateSchema);
 export const addonRouter = simpleResourceRouter(Addon, 'Addon', addonSchema, addonUpdateSchema);
 export const faqRouter = simpleResourceRouter(Faq, 'FAQ', faqSchema, faqUpdateSchema, 'order');
+/* ---------- Reviews ---------- */
+// The public site only sees published reviews; admins (with a token) see all,
+// including customer reviews waiting for approval.
+const isAdmin = (req) => req.user?.role === 'admin';
+const reviewCrud = crudFactory(Review, { label: 'Review', sort: '-createdAt' });
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // ?product=<id> returns that cake's reviews (newest first); no param = all reviews.
 const listReviews = asyncHandler(async (req, res) => {
   const { product } = req.query;
-  const filter = product && /^[a-f\d]{24}$/i.test(product) ? { product } : {};
+  const filter = {
+    ...(product && /^[a-f\d]{24}$/i.test(product) ? { product } : {}),
+    ...(isAdmin(req) ? {} : PUBLIC_REVIEW_FILTER),
+  };
   sendSuccess(res, { data: await Review.find(filter).sort('-createdAt') });
 });
-export const reviewRouter = simpleResourceRouter(Review, 'Review', reviewSchema, reviewUpdateSchema, '-createdAt', [listReviews]);
+
+const getReview = asyncHandler(async (req, res) => {
+  const review = await Review.findOne({ _id: req.params.id, ...(isAdmin(req) ? {} : PUBLIC_REVIEW_FILTER) });
+  if (!review) throw ApiError.notFound('Review not found');
+  sendSuccess(res, { data: review });
+});
+
+// The signed-in customer's own reviews, so the account page knows what they've already rated.
+const listMyReviews = asyncHandler(async (req, res) => {
+  sendSuccess(res, { data: await Review.find({ user: req.user._id }).sort('-createdAt') });
+});
+
+// A customer can review a cake only from one of their own delivered orders.
+const createMyReview = asyncHandler(async (req, res) => {
+  const { order: orderId, product, rating, text, occ } = req.body;
+  const order = await Order.findOne({
+    _id: orderId,
+    // Orders placed as a guest with the same email also count as theirs.
+    $or: [{ user: req.user._id }, { user: null, email: new RegExp(`^${escapeRegex(req.user.email)}$`, 'i') }],
+  });
+  if (!order) throw ApiError.notFound('Order not found');
+  if (order.status !== 'Delivered') throw ApiError.badRequest('You can review a cake once your order has been delivered.');
+  const cake = await Product.findById(product).select('name');
+  if (!cake) throw ApiError.notFound('That cake is no longer in our shop.');
+  // Older orders stored only the cake's name, so fall back to matching on that.
+  const inOrder = order.items.some((i) => (i.pid ? String(i.pid) === product : i.name === cake.name));
+  if (!inOrder) throw ApiError.badRequest('That cake is not part of this order.');
+  if (await Review.exists({ user: req.user._id, order: order._id, product })) {
+    throw ApiError.conflict('You have already reviewed this cake for this order.');
+  }
+  const review = await Review.create({
+    name: req.user.name, occ, rating, text, product,
+    status: 'Pending', user: req.user._id, order: order._id, orderCode: order.code,
+  });
+  sendSuccess(res, { statusCode: 201, message: 'Thanks! Your review will appear once we have checked it.', data: review });
+});
+
+export const reviewRouter = Router();
+reviewRouter.get('/', optionalAuth, listReviews);
+reviewRouter.get('/mine', protect, listMyReviews);
+reviewRouter.post('/mine', protect, validateBody(customerReviewSchema), createMyReview);
+reviewRouter.get('/:id', optionalAuth, getReview);
+reviewRouter.post('/', protect, restrictTo('admin'), validateBody(reviewSchema), reviewCrud.create);
+reviewRouter.put('/:id', protect, restrictTo('admin'), validateBody(reviewUpdateSchema), reviewCrud.update);
+reviewRouter.delete('/:id', protect, restrictTo('admin'), reviewCrud.remove);
 // Public visitors only get active messages; admins (with a token) see all.
 const listAnnouncements = asyncHandler(async (req, res) => {
   const filter = req.user?.role === 'admin' ? {} : { active: true };

@@ -6,6 +6,7 @@ import {
   listAdmins, createAdmin, removeAdmin, listSubscribers, deleteSubscriber,
   listAllComments, setCommentHidden, deleteComment,
 } from '../controllers/adminController.js';
+import { getSmtp, updateSmtp, testSmtp } from '../controllers/smtpController.js';
 
 const createAdminSchema = z.object({
   name: z.string().trim().min(2, 'Name is too short'),
@@ -13,9 +14,30 @@ const createAdminSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
+const email = z.string().trim().toLowerCase().email('Enter a valid email');
+const optionalEmail = z.union([email, z.literal('')]);
+const smtpSchema = z.object({
+  enabled: z.boolean().optional(),
+  host: z.string().trim().max(200).regex(/^[a-z0-9.-]*$/i, 'Enter a server name like smtp.gmail.com').optional(),
+  port: z.coerce.number().int().min(1, 'Port must be 1–65535').max(65535, 'Port must be 1–65535').optional(),
+  security: z.enum(['ssl', 'starttls', 'none']).optional(),
+  username: z.string().trim().max(200).optional(),
+  password: z.string().max(500).optional(),
+  clearPassword: z.boolean().optional(),
+  fromName: z.string().trim().max(80).optional(),
+  fromEmail: optionalEmail.optional(),
+  replyTo: optionalEmail.optional(),
+  notifyEmail: optionalEmail.optional(),
+});
+const smtpTestSchema = smtpSchema.omit({ enabled: true, clearPassword: true }).extend({ to: email });
+
 /** Admin-only management endpoints that don't belong to a public resource. */
 const router = Router();
 router.use(protect, restrictTo('admin'));
+
+router.get('/smtp', getSmtp);
+router.put('/smtp', validateBody(smtpSchema), updateSmtp);
+router.post('/smtp/test', validateBody(smtpTestSchema), testSmtp);
 
 router.get('/admins', listAdmins);
 router.post('/admins', validateBody(createAdminSchema), createAdmin);
