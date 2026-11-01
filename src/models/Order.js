@@ -15,6 +15,22 @@ const orderItemSchema = new mongoose.Schema(
 );
 
 const STATUSES = ['New', 'Baking', 'Out for delivery', 'Delivered', 'Cancelled'];
+const FULFILLMENT_METHODS = ['Self', 'Shiprocket'];
+
+const fulfillmentSchema = new mongoose.Schema(
+  {
+    method: { type: String, enum: FULFILLMENT_METHODS, default: 'Self' },
+    shiprocketOrderId: { type: String, default: '' },
+    shiprocketShipmentId: { type: String, default: '' },
+    awbCode: { type: String, default: '' },
+    courierName: { type: String, default: '' },
+    status: { type: String, default: '' }, // raw Shiprocket shipment status text
+    lastError: { type: String, default: '' }, // surfaced in the admin Fulfillment card
+    assignedAt: { type: Date, default: null },
+    assignedBy: { type: String, default: '' }, // admin's name/email
+  },
+  { _id: false }
+);
 
 const orderSchema = new mongoose.Schema(
   {
@@ -33,6 +49,9 @@ const orderSchema = new mongoose.Schema(
     slot: { type: String, default: '' },
     deliver: { type: String, default: '' },
     addr: { type: String, required: true },
+    pincode: { type: String, default: '' }, // customer delivery pincode — new orders only
+    shippingWeightKg: { type: Number, default: null, min: 0 },
+    fulfillment: { type: fulfillmentSchema, default: () => ({}) },
     msg: { type: String, default: '' },
     notes: { type: String, default: '' },
     pay: { type: String, enum: ['UPI', 'Card', 'Net Banking'], required: true },
@@ -57,4 +76,5 @@ orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ status: 1, createdAt: -1 });
 
 export const ORDER_STATUSES = STATUSES;
+export const FULFILLMENT_METHODS_LIST = FULFILLMENT_METHODS;
 export const Order = mongoose.model('Order', orderSchema);

@@ -7,6 +7,7 @@ import {
   listAllComments, setCommentHidden, deleteComment,
 } from '../controllers/adminController.js';
 import { getSmtp, updateSmtp, testSmtp } from '../controllers/smtpController.js';
+import { getShiprocketConfig, updateShiprocketConfig, testShiprocketConnection } from '../controllers/shiprocketConfigController.js';
 
 const createAdminSchema = z.object({
   name: z.string().trim().min(2, 'Name is too short'),
@@ -31,6 +32,21 @@ const smtpSchema = z.object({
 });
 const smtpTestSchema = smtpSchema.omit({ enabled: true, clearPassword: true }).extend({ to: email });
 
+const shiprocketCredsSchema = z.object({
+  email: optionalEmail.optional(),
+  password: z.string().max(500).optional(),
+  clearPassword: z.boolean().optional(),
+  pickupLocation: z.string().trim().max(120).optional(),
+  pickupPincode: z.string().trim().regex(/^\d{0,6}$/, 'Enter a 6-digit pincode').optional(),
+});
+const shiprocketConfigSchema = z.object({
+  mode: z.enum(['test', 'live']).optional(),
+  apiBaseUrl: z.string().trim().url().optional(),
+  test: shiprocketCredsSchema.optional(),
+  live: shiprocketCredsSchema.optional(),
+});
+const shiprocketTestSchema = shiprocketConfigSchema;
+
 /** Admin-only management endpoints that don't belong to a public resource. */
 const router = Router();
 router.use(protect, restrictTo('admin'));
@@ -38,6 +54,10 @@ router.use(protect, restrictTo('admin'));
 router.get('/smtp', getSmtp);
 router.put('/smtp', validateBody(smtpSchema), updateSmtp);
 router.post('/smtp/test', validateBody(smtpTestSchema), testSmtp);
+
+router.get('/shiprocket', getShiprocketConfig);
+router.put('/shiprocket', validateBody(shiprocketConfigSchema), updateShiprocketConfig);
+router.post('/shiprocket/test', validateBody(shiprocketTestSchema), testShiprocketConnection);
 
 router.get('/admins', listAdmins);
 router.post('/admins', validateBody(createAdminSchema), createAdmin);

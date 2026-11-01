@@ -10,14 +10,14 @@ import { priceCart } from '../utils/pricing.js';
 
 /** Prices the cart server-side (items, promo, delivery) without charging — used by cart/checkout to show totals. */
 export const quoteCart = asyncHandler(async (req, res) => {
-  const { items, promoCode, email } = req.body;
-  const quote = await priceCart(items, { promoCode, email, userId: req.user?._id });
+  const { items, promoCode, email, pincode } = req.body;
+  const quote = await priceCart(items, { promoCode, email, pincode, userId: req.user?._id });
   sendSuccess(res, { data: quote });
 });
 
 export const createRazorpayOrder = asyncHandler(async (req, res) => {
-  const { items, promoCode, email } = req.body;
-  const quote = await priceCart(items, { promoCode, email, userId: req.user?._id });
+  const { items, promoCode, email, pincode } = req.body;
+  const quote = await priceCart(items, { promoCode, email, pincode, userId: req.user?._id });
   if (quote.total < 1) throw ApiError.badRequest('Order total must be at least ₹1');
   const order = await razorpay.orders.create({
     amount: Math.round(quote.total * 100), // paise — computed by the server, never by the client

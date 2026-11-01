@@ -21,6 +21,7 @@ export const createOrderSchema = z.object({
   slot: z.string().min(1, 'Select a delivery slot'),
   deliver: z.string().min(1, 'Select a delivery date'),
   addr: z.string().min(1, 'Delivery address is required'),
+  pincode: z.string().trim().regex(/^\d{6}$/, 'Enter a valid 6-digit pincode'),
   msg: z.string().optional().default(''),
   notes: z.string().optional().default(''),
   pay: z.enum(['UPI', 'Card', 'Net Banking']),
@@ -41,4 +42,9 @@ export const updateOrderDetailsSchema = z.object({
 
 export const updateOrderStatusSchema = z.object({
   status: z.enum(['New', 'Baking', 'Out for delivery', 'Delivered', 'Cancelled']),
+});
+
+export const createShiprocketShipmentSchema = z.object({
+  city: z.string().trim().min(1, 'City is required'),
+  state: z.string().trim().min(1, 'State is required'),
 });

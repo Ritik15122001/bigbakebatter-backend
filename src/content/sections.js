@@ -580,7 +580,6 @@ export const SECTIONS = [
       text('title', 'Heading'),
       text('intro', 'Intro'),
       text('eyebrow', 'Small label above the heading'),
-      list('process', 'How it works (card beside the heading)', [text('text', 'Step')], 'text', 'Shown as numbered steps 01, 02, 03… Leave empty to hide the card.'),
       list('heroImages', 'Slideshow photos (right of the form)', [image('image', 'Photo'), text('alt', 'Photo description', ALT_HINT)], 'alt'),
       text('kicker', 'Slideshow — small heading', KICKER_HINT),
       text('slideTitle', 'Slideshow — heading'),
@@ -604,7 +603,6 @@ export const SECTIONS = [
       title: 'Create your custom cake',
       intro: 'Tell us your idea — our bakers design and quote it within 24 hours.',
       eyebrow: 'Custom cakes',
-      process: [{ text: 'Send your idea' }, { text: 'Design & quote in 24h' }, { text: 'Approve and we bake' }],
       heroImages: [
         { image: IMG('photo-1562777717-dc6984f65a63'), alt: 'Hand-piped floral buttercream cake' },
         { image: IMG('photo-1535141192574-5d4897c12636'), alt: 'Custom celebration cake' },
